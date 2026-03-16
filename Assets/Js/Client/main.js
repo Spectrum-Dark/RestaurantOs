@@ -69,7 +69,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
 function obtenerMesaURL() {
     const params = new URLSearchParams(window.location.search);
-    const mesa   = parseInt(params.get('mesa'), 10);
+    let mesa = parseInt(params.get('mesa'), 10);
+    
+    /* Decodificando el nuevo parametro en base64 "m=" */
+    if (!mesa && params.get('m')) {
+        try {
+            mesa = parseInt(atob(params.get('m')), 10);
+        } catch (e) {
+            console.error('QR inválido');
+        }
+    }
+    
     return (!mesa || isNaN(mesa) || mesa < 1) ? 1 : mesa; // fallback mesa 1
 }
 

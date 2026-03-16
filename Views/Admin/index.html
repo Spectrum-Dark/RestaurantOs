@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="description" content="Panel de administración del sistema de restaurante. Gestiona mesas, trabajadores e ingresos.">
     <title>Admin Panel | RestaurantOS</title>
 
@@ -11,6 +11,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../Assets/Css/Admin/admin.css">
+    
+    <!-- Librería para generar QR Visual -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
 
@@ -405,19 +408,19 @@
                 <!-- Filtros por categoría -->
                 <div class="menu-filters" id="menuFilters">
                     <button class="filter-btn active" id="filter-Todos" onclick="filtrarCategoria('Todos')">
-                        <i class="bi bi-grid-fill"></i> Todos
+                        <span>📋</span> Todos
                     </button>
                     <button class="filter-btn" id="filter-Comida" onclick="filtrarCategoria('Comida')">
-                        <i class="bi bi-egg-fried"></i> Comidas
+                        <span>🍽️</span> Comidas
                     </button>
                     <button class="filter-btn" id="filter-Bebida" onclick="filtrarCategoria('Bebida')">
-                        <i class="bi bi-cup-straw"></i> Bebidas
+                        <span>🥤</span> Bebidas
                     </button>
                     <button class="filter-btn" id="filter-Postre" onclick="filtrarCategoria('Postre')">
-                        <i class="bi bi-cake2-fill"></i> Postres
+                        <span>🍮</span> Postres
                     </button>
                     <button class="filter-btn" id="filter-Extra" onclick="filtrarCategoria('Extra')">
-                        <i class="bi bi-star-fill"></i> Extras
+                        <span>✨</span> Extras
                     </button>
                 </div>
 
@@ -449,7 +452,6 @@
                         <thead>
                             <tr>
                                 <th><i class="bi bi-layout-three-columns"></i> Mesa</th>
-                                <th><i class="bi bi-receipt"></i> Consumo</th>
                                 <th><i class="bi bi-cash"></i> Total</th>
                                 <th><i class="bi bi-clock"></i> Hora</th>
                                 <th><i class="bi bi-person-fill"></i> Mesero</th>
@@ -457,7 +459,7 @@
                         </thead>
                         <tbody id="bolsaBody">
                             <tr>
-                                <td colspan="5" class="table-empty">
+                                <td colspan="4" class="table-empty">
                                     <i class="bi bi-inbox"></i> Sin registros por el momento
                                 </td>
                             </tr>
@@ -547,6 +549,18 @@
                     </select>
                 </div>
             </div>
+            
+            <div class="field-group" style="margin-top: .5rem; padding: 1rem; background: var(--bg-overlay); border-radius: var(--radius-md); border: 1px dashed var(--border-base);">
+                <label class="field-label" style="display:flex; justify-content:space-between; align-items:center;">
+                    Código de acceso
+                    <button class="btn-card-action" style="font-size:.75rem; width:auto; padding: 0 .5rem; height: 1.5rem;" onclick="generarNuevoCodigo()" title="Generar otro código"><i class="bi bi-arrow-clockwise"></i> Generar</button>
+                </label>
+                <div style="font-size: 2rem; font-weight: 800; text-align: center; color: var(--accent); letter-spacing: .5rem; margin-top: .5rem;" id="trabCodigoDisplay">
+                    000000
+                </div>
+                <input type="hidden" id="trabCodigo">
+                <p style="text-align:center; font-size:.75rem; color:var(--text-muted); margin-top:.5rem;">Comparte este código con el trabajador para que inicie sesión.</p>
+            </div>
         </div>
         <div class="modal-footer">
             <button class="btn-modal btn-modal--ghost" onclick="cerrarModal('modalTrabajador')">Cancelar</button>
@@ -566,7 +580,8 @@
         </div>
         <div class="modal-body">
             <div class="qr-display">
-                <div class="qr-icon-wrap"><i class="bi bi-qr-code"></i></div>
+                <!-- Contenedor donde se dibujará el código QR visual -->
+                <div id="qrCanvas" class="qr-canvas-wrap"></div>
                 <p class="qr-label">Enlace de acceso para la mesa:</p>
                 <div class="qr-link-box">
                     <span class="qr-link-text" id="qrLinkText"></span>
@@ -579,8 +594,8 @@
             <button class="btn-modal btn-modal--orange" onclick="copiarLink()" id="btnCopiarQR">
                 <i class="bi bi-clipboard-fill"></i> Copiar enlace
             </button>
-            <button class="btn-modal btn-modal--danger" onclick="eliminarQR()">
-                <i class="bi bi-trash-fill"></i> Eliminar QR
+            <button class="btn-modal btn-modal--primary" onclick="descargarQR()">
+                <i class="bi bi-download"></i> Descargar QR
             </button>
         </div>
     </div>

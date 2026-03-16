@@ -230,7 +230,7 @@ function navigate(vista) {
     const titulos = {
         dashboard:    'Dashboard',
         mesas:        'Gestión de Mesas',
-        menu:         'Menú del Restaurante',
+        menu:         'Restaurante',
         trabajadores: 'Trabajadores',
         bolsa:        'Bolsa del Día',
     };
@@ -450,9 +450,13 @@ function generarQR(mesaId) {
     const mesa = DB.mesas.find(function (m) { return m.id === mesaId; });
     if (!mesa) return;
     const origen = window.location.origin;
-    mesa.qr = origen + '/Views/Client/index.html?mesa=' + mesa.id;
+    /* Cifrando en Base64 el parámetro para que no quede expuesto tan fácilmente */
+    const parametroCifrado = btoa(mesa.id.toString());
+    mesa.qr = origen + '/Views/Client/index.html?m=' + parametroCifrado;
     return mesa.qr;
 }
+
+let qrInstancia = null;
 
 function abrirQR(mesaId) {
     const mesa = DB.mesas.find(function (m) { return m.id === mesaId; });
@@ -466,6 +470,20 @@ function abrirQR(mesaId) {
     document.getElementById('qrLinkText').textContent = mesa.qr;
     document.getElementById('qrMesaInfo').textContent = 'Mesa ' + mesa.numero + ' — Estado: ' + mesa.estado;
     document.getElementById('modalQRTitle').innerHTML = '<i class="bi bi-qr-code"></i> QR — Mesa ' + mesa.numero;
+
+    const canvas = document.getElementById('qrCanvas');
+    canvas.innerHTML = ''; /* Limpiar el QR viejo */
+    
+    if(typeof QRCode !== 'undefined') {
+        qrInstancia = new QRCode(canvas, {
+            text: mesa.qr,
+            width: 512,  /* Alta resolución para descarga (512x512) */
+            height: 512,
+            colorDark : "#222222",
+            colorLight : "#ffffff",
+            correctLevel : QRCode.CorrectLevel.H
+        });
+    }
 
     abrirModal('modalQR');
     renderMesas();
@@ -495,24 +513,59 @@ function copiarLink() {
     }
 }
 
-function eliminarQR() {
+function descargarQR() {
     if (!mesaQRActual) return;
-    mesaQRActual.qr = null;
-    cerrarModal('modalQR');
-    renderMesas();
-    showToast('QR eliminado de la Mesa ' + mesaQRActual.numero + '.', 'info');
-    mesaQRActual = null;
+    const qrcanvas = document.querySelector('#qrCanvas canvas');
+    if (!qrcanvas) {
+        showToast('No se pudo generar la imagen del QR.', 'error');
+        return;
+    }
+
+    /* Añadimos un margen/padding blanco generoso (ej: 40px en cada lado) */
+    const padding = 40;
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = qrcanvas.width + (padding * 2);
+    tempCanvas.height = qrcanvas.height + (padding * 2);
+    
+    const ctx = tempCanvas.getContext('2d');
+    ctx.fillStyle = '#ffffff'; /* Fondo blanco puro */
+    ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+    
+    /* Dibujamos el QR original por encima centrado con el padding */
+    ctx.drawImage(qrcanvas, padding, padding);
+
+    const a = document.createElement('a');
+    a.href = tempCanvas.toDataURL('image/jpeg', 1.0);
+    a.download = 'QR_Mesa_' + mesaQRActual.numero + '.jpg';
+    
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    showToast('Código QR descargado.', 'success');
 }
 
 
 /* ══════════════════════════════════════════════
    TRABAJADORES
 ══════════════════════════════════════════════ */
+function generarNuevoCodigo() {
+    /* Generar un código aleatorio de 6 dígitos (100000 - 999999) */
+    const min = 100000;
+    const max = 999999;
+    const codigo = Math.floor(Math.random() * (max - min + 1)) + min;
+    
+    document.getElementById('trabCodigoDisplay').textContent = codigo.toString();
+    document.getElementById('trabCodigo').value = codigo.toString();
+}
+
 function abrirModalTrabajador() {
     document.getElementById('formRegister') && document.getElementById('formRegister').reset();
     document.getElementById('trabNombre').value  = '';
     document.getElementById('trabUsuario').value = '';
     document.getElementById('trabRol').value     = 'Mesero';
+    
+    generarNuevoCodigo(); /* Se autogenera al abrir el modal */
+    
     abrirModal('modalTrabajador');
 }
 
@@ -520,6 +573,7 @@ function crearTrabajador() {
     const nombre  = document.getElementById('trabNombre').value.trim();
     const usuario = document.getElementById('trabUsuario').value.trim();
     const rol     = document.getElementById('trabRol').value;
+    const codigo  = document.getElementById('trabCodigo').value;
 
     if (!nombre || !usuario) {
         showToast('Completa todos los campos del trabajador.', 'error');
@@ -532,11 +586,19 @@ function crearTrabajador() {
         return;
     }
 
+    /* Validar que el código no esté repetido por si acaso */
+    const codigoExiste = DB.trabajadores.find(function(t) { return t.codigo === codigo; });
+    if(codigoExiste) {
+        showToast('Este código numérico lo tiene otro usuario, por favor genera uno nuevo.', 'error');
+        return;
+    }
+
     DB.trabajadores.push({
         id:      DB.trabIdCounter++,
         nombre:  nombre,
         usuario: usuario,
         rol:     rol,
+        codigo:  codigo,
     });
 
     cerrarModal('modalTrabajador');
@@ -572,12 +634,13 @@ function renderTrabajadores() {
         row.className = 'trab-row';
 
         const rolClass = t.rol === 'Mesero' ? 'rol--mesero' : 'rol--caja';
+        const pinText = t.codigo || '000000';
 
         row.innerHTML = `
             <div class="trab-avatar">${inicial(t.nombre)}</div>
             <div class="trab-info">
                 <span class="trab-name">${t.nombre}</span>
-                <span class="trab-user">@${t.usuario}</span>
+                <span class="trab-user">@${t.usuario} <span style="margin-left:.75rem; padding: .15rem .45rem; background:rgba(249,115,22,.1); color:var(--accent); border-radius:100px; font-family:monospace; font-weight:700;">PIN: ${pinText}</span></span>
             </div>
             <span class="trab-rol-badge ${rolClass}">${t.rol}</span>
             <button class="trab-del" onclick="eliminarTrabajador(${t.id})" title="Eliminar trabajador">
@@ -727,12 +790,12 @@ function renderMenu() {
         const card = document.createElement('div');
         card.className = 'prod-card';
 
-        const catIcons = { Comida: 'bi-egg-fried', Bebida: 'bi-cup-straw', Postre: 'bi-cake2-fill', Extra: 'bi-star-fill' };
+        const catEmojis = { Comida: '🍽️', Bebida: '🥤', Postre: '🍮', Extra: '✨' };
         
         card.innerHTML = `
             <div class="prod-header">
-                <div class="prod-icon-wrap cat-ico--${prod.categoria}">
-                    <i class="bi ${catIcons[prod.categoria] || 'bi-grid-fill'}"></i>
+                <div class="prod-icon-wrap cat-ico--${prod.categoria}" style="font-size:1.5rem">
+                    ${catEmojis[prod.categoria] || '📌'}
                 </div>
                 <div class="prod-actions">
                     <button class="btn-card-action btn-card-action--edit" onclick="editarProducto(${prod.id})" title="Editar"><i class="bi bi-pencil-fill"></i></button>
@@ -752,6 +815,29 @@ function renderMenu() {
 /* ══════════════════════════════════════════════
    BOLSA DEL DÍA
 ══════════════════════════════════════════════ */
+function formato12h(horaStr) {
+    if (!horaStr || horaStr.indexOf(':') === -1) return horaStr;
+    const partes = horaStr.split(':');
+    let h = parseInt(partes[0], 10);
+    const m = partes[1];
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12 || 12;
+    return typeof h === 'number' && !isNaN(h) ? h + ':' + m + ' ' + ampm : horaStr;
+}
+
+function toggleBolsaDetalle(idx) {
+    const row = document.getElementById('boldet-' + idx);
+    const icon = document.getElementById('boldet-icon-' + idx);
+    if (!row) return;
+    if (row.style.display === 'none') {
+        row.style.display = 'table-row';
+        if(icon) icon.className = 'bi bi-chevron-up bolsa-chevron';
+    } else {
+        row.style.display = 'none';
+        if(icon) icon.className = 'bi bi-chevron-down bolsa-chevron';
+    }
+}
+
 function renderBolsa() {
     const tbody = document.getElementById('bolsaBody');
     const total = DB.bolsa.reduce(function (s, b) { return s + b.total; }, 0);
@@ -759,17 +845,23 @@ function renderBolsa() {
     document.getElementById('bolsaTotal').textContent = 'C$' + total.toFixed(2);
 
     if (DB.bolsa.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="table-empty"><i class="bi bi-inbox"></i> Sin registros por el momento</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="4" class="table-empty"><i class="bi bi-inbox"></i> Sin registros por el momento</td></tr>';
         return;
     }
 
-    tbody.innerHTML = DB.bolsa.map(function (b) {
-        return '<tr>'
-             + '<td>Mesa ' + b.mesa + '</td>'
-             + '<td>' + b.consumo + '</td>'
-             + '<td>C$' + b.total.toFixed(2) + '</td>'
-             + '<td>' + b.hora + '</td>'
-             + '<td>' + b.mesero + '</td>'
+    tbody.innerHTML = DB.bolsa.map(function (b, idx) {
+        return '<tr class="bolsa-main-row" onclick="toggleBolsaDetalle(' + idx + ')">'
+             + '<td data-label="Mesa" style="font-weight:700;color:var(--text-primary)">Mesa ' + b.mesa + '</td>'
+             + '<td data-label="Total" style="font-weight:800;color:var(--accent-green)">C$' + b.total.toFixed(2) + '</td>'
+             + '<td data-label="Hora">' + formato12h(b.hora) + '</td>'
+             + '<td data-label="Mesero">' + b.mesero + ' <i id="boldet-icon-' + idx + '" class="bi bi-chevron-down bolsa-chevron"></i></td>'
+             + '</tr>'
+             + '<tr id="boldet-' + idx + '" class="bolsa-det-row" style="display:none;">'
+             + '<td colspan="4">'
+             + '<div class="bolsa-det-content">'
+             + '<span class="bdc-label"><i class="bi bi-receipt"></i> Detalle de consumo</span><br>'
+             + b.consumo
+             + '</div></td>'
              + '</tr>';
     }).join('');
 }
@@ -809,8 +901,17 @@ document.addEventListener('keydown', function (e) {
    INIT (datos demo para ver el panel de inmediato)
 ══════════════════════════════════════════════ */
 (function seedDemo() {
+    /* Auto-fill de credenciales para tu demo rápido */
+    setTimeout(function() {
+        const u = document.getElementById('loginUser');
+        const p = document.getElementById('loginPass');
+        if (u && p && !u.value) {
+            u.value = 'Bryan MQ';
+            p.value = '241299';
+        }
+    }, 100);
     /* Admin demo */
-    DB.admins.push({ nombre: 'Administrador', usuario: 'admin', password: 'admin123' });
+    DB.admins.push({ nombre: 'Bryan Antonio Muñoz Quezada', usuario: 'Bryan MQ', password: '241299' });
 
     /* Mesas demo */
     DB.mesas.push({ id: DB.mesaIdCounter++, numero: 1, estado: 'ocupada', qr: null });
@@ -818,9 +919,9 @@ document.addEventListener('keydown', function (e) {
     DB.mesas.push({ id: DB.mesaIdCounter++, numero: 3, estado: 'espera',  qr: null });
 
     /* Trabajadores demo */
-    DB.trabajadores.push({ id: DB.trabIdCounter++, nombre: 'Carlos López',    usuario: 'carlos',  rol: 'Mesero' });
-    DB.trabajadores.push({ id: DB.trabIdCounter++, nombre: 'Sofía Martínez',  usuario: 'sofia',   rol: 'Mesero' });
-    DB.trabajadores.push({ id: DB.trabIdCounter++, nombre: 'Luis Hernández',  usuario: 'luis',    rol: 'Caja'   });
+    DB.trabajadores.push({ id: DB.trabIdCounter++, nombre: 'Carlos López',    usuario: 'carlos',  rol: 'Mesero', codigo: '123456' });
+    DB.trabajadores.push({ id: DB.trabIdCounter++, nombre: 'Sofía Martínez',  usuario: 'sofia',   rol: 'Mesero', codigo: '654321' });
+    DB.trabajadores.push({ id: DB.trabIdCounter++, nombre: 'Luis Hernández',  usuario: 'luis',    rol: 'Caja', codigo: '889900'   });
 
     /* Bolsa demo */
     DB.bolsa.push({ mesa: 1, consumo: 'Almuerzo x2', total: 280.00, hora: '12:35', mesero: 'Carlos' });
