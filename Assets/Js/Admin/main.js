@@ -449,10 +449,14 @@ function estadoColor(estado) {
 function generarQR(mesaId) {
     const mesa = DB.mesas.find(function (m) { return m.id === mesaId; });
     if (!mesa) return;
-    const origen = window.location.origin;
+    
+    /* Al subir a directorios como GitHub Pages, 'origin' omite el nombre del repositorio. 
+       Extraemos la ruta dinámicamente según dónde esté alojada la página principal. */
+    const baseRuta = window.location.href.split('/Views/Admin')[0];
+    
     /* Cifrando en Base64 el parámetro para que no quede expuesto tan fácilmente */
     const parametroCifrado = btoa(mesa.id.toString());
-    mesa.qr = origen + '/Views/Client/index.html?m=' + parametroCifrado;
+    mesa.qr = baseRuta + '/Views/Client/index.html?m=' + parametroCifrado;
     return mesa.qr;
 }
 
