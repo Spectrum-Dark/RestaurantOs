@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Panel del mesero — RestaurantOS. Gestiona tus mesas, pedidos y cuentas en tiempo real.">
+    <title>Panel Mesero | RestaurantOS</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../Assets/Css/Service/service.css?v=2">
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════
+     PANTALLA: LOGIN MESERO
+══════════════════════════════════════════ -->
+<div class="auth-screen" id="authScreen">
+
+    <div class="auth-glow auth-glow--a"></div>
+    <div class="auth-glow auth-glow--b"></div>
+
+    <div class="auth-box">
+
+        <div class="auth-logo">
+            <span class="auth-logo-icon"><i class="bi bi-person-workspace"></i></span>
+            <span class="auth-logo-name">RestaurantOS</span>
+        </div>
+
+        <div class="auth-header">
+            <h1 class="auth-title">Panel del Mesero</h1>
+            <p class="auth-subtitle">Ingresa tus credenciales para continuar</p>
+        </div>
+
+        <form class="auth-form" id="formLogin" onsubmit="loginMesero(event)">
+            <div class="field-group">
+                <label class="field-label" for="loginUser">Usuario</label>
+                <div class="field-wrap">
+                    <i class="bi bi-person-fill field-icon"></i>
+                    <input class="field-input" id="loginUser" type="text" placeholder="Nombre de usuario" autocomplete="username" required>
+                </div>
+            </div>
+
+            <div class="field-group">
+                <label class="field-label" for="loginPass">Contraseña</label>
+                <div class="field-wrap">
+                    <i class="bi bi-lock-fill field-icon"></i>
+                    <input class="field-input" id="loginPass" type="password" placeholder="••••••••" autocomplete="current-password" required>
+                    <button type="button" class="field-toggle" id="togglePass" onclick="togglePassword('loginPass','togglePass')" aria-label="Mostrar contraseña">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="auth-msg" id="loginMsg"></div>
+
+            <button class="btn-auth btn-auth--primary" type="submit" id="btnLogin">
+                <i class="bi bi-person-workspace"></i>
+                Iniciar sesión
+            </button>
+        </form>
+
+        <div class="auth-hint">
+            <i class="bi bi-info-circle"></i>
+            Demo: carlos/1234 · sofia/1234 · luis/1234
+        </div>
+
+        <a class="auth-back" href="../../index.html">
+            <i class="bi bi-arrow-left"></i> Volver al inicio
+        </a>
+    </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     PANEL MESERO
+══════════════════════════════════════════ -->
+<div class="panel" id="panelMesero" style="display:none;">
+
+    <!-- ── TOPBAR ── -->
+    <header class="topbar" id="topbar">
+        <div class="topbar-left">
+            <span class="topbar-logo"><i class="bi bi-fire"></i></span>
+            <span class="topbar-brand">RestaurantOS</span>
+            <span class="topbar-sep">|</span>
+            <span class="topbar-section">Panel Mesero</span>
+        </div>
+        <div class="topbar-right">
+            <div class="topbar-time" id="topbarTime"></div>
+            <div class="mesero-badge" id="meseroBadge">
+                <span class="mb-avatar" id="mbAvatar">M</span>
+                <span class="mb-name" id="mbName">Mesero</span>
+            </div>
+            <button class="btn-logout" onclick="logout()" title="Cerrar sesión">
+                <i class="bi bi-box-arrow-left"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- ── CONTENT ── -->
+    <main class="panel-content">
+
+        <!-- Header de sección -->
+        <div class="section-header">
+            <div class="sh-left">
+                <h2 class="sh-title">Mesas del Restaurante</h2>
+                <p class="sh-sub">Selecciona una mesa para comenzar a atender</p>
+            </div>
+            <div class="sh-stats" id="shStats">
+                <div class="stat-pill stat-pill--libre">
+                    <i class="bi bi-circle"></i>
+                    <span id="statLibre">0</span> Libres
+                </div>
+                <div class="stat-pill stat-pill--ocupada">
+                    <i class="bi bi-circle-fill"></i>
+                    <span id="statOcupada">0</span> Ocupadas
+                </div>
+                <div class="stat-pill stat-pill--pagar">
+                    <i class="bi bi-credit-card-fill"></i>
+                    <span id="statPagar">0</span> Por pagar
+                </div>
+            </div>
+        </div>
+
+        <!-- Leyenda de estados -->
+        <div class="estado-legend">
+            <span class="el-item"><span class="el-dot el-dot--libre"></span> Libre</span>
+            <span class="el-item"><span class="el-dot el-dot--presente"></span> Cliente presente</span>
+            <span class="el-item"><span class="el-dot el-dot--atencion"></span> Solicita atención</span>
+            <span class="el-item"><span class="el-dot el-dot--pedido"></span> Pedido en proceso</span>
+            <span class="el-item"><span class="el-dot el-dot--pagar"></span> Por pagar</span>
+        </div>
+
+        <!-- Grid de mesas -->
+        <div class="mesas-grid" id="mesasGrid">
+            <!-- Cards generadas por JS -->
+        </div>
+
+    </main>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     MODAL: ATENCIÓN DE MESA (POS)
+══════════════════════════════════════════ -->
+<div class="pos-backdrop" id="posBackdrop">
+    <div class="pos-panel" id="posPanel" role="dialog" aria-modal="true">
+
+        <!-- POS Header -->
+        <div class="pos-header">
+            <div class="pos-header-left">
+                <div class="pos-mesa-icon"><i class="bi bi-layout-three-columns"></i></div>
+                <div>
+                    <h3 class="pos-title" id="posTitle">Mesa 1</h3>
+                    <span class="pos-estado-tag" id="posEstadoTag">Libre</span>
+                </div>
+            </div>
+            <div class="pos-header-right">
+                <span class="pos-atendida-badge" id="posAtendidaBadge">
+                    <i class="bi bi-person-check-fill"></i> Atendida por ti
+                </span>
+                <button class="pos-close" onclick="cerrarPOS()" aria-label="Cerrar">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- POS Body -->
+        <div class="pos-body">
+
+            <!-- Columna izquierda: Órdenes -->
+            <div class="pos-menu-col">
+                <div class="pos-col-header">
+                    <i class="bi bi-list-ul"></i>
+                    <span>Órdenes del Cliente</span>
+                </div>
+                <div class="pos-menu-list" id="posOrderListCol">
+                    <!-- Lista de órdenes generadas por JS -->
+                    <div class="pos-order-empty">
+                        <p>No hay órdenes del cliente</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Columna derecha: Detalles de la orden -->
+            <div class="pos-order-col">
+                <div class="pos-col-header">
+                    <i class="bi bi-receipt"></i>
+                    <span>Detalle de la Orden</span>
+                </div>
+
+                <!-- Tabla de orden -->
+                <div class="pos-order-wrapper">
+                    <div id="posDetalleEmpty" class="pos-order-empty">
+                        <i class="bi bi-hand-index"></i>
+                        <p>Selecciona una orden para ver los detalles</p>
+                    </div>
+                    <table class="pos-order-table" id="posDetalleTable" style="display:none;">
+                        <thead>
+                            <tr>
+                                <th>Producto</th>
+                                <th>Cant.</th>
+                                <th>Precio</th>
+                                <th>Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody id="posDetalleBody">
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Total -->
+                <div class="pos-total-row">
+                    <span class="pos-total-label">Total a pagar</span>
+                    <span class="pos-total-value" id="posTotal">C$ 0.00</span>
+                </div>
+
+                <!-- Acciones -->
+                <div class="pos-actions">
+                    <button class="btn-pos btn-pos--served" onclick="marcarServido()" id="btnMarcarServido">
+                        <i class="bi bi-check2-all"></i>
+                        <span>Marcar servido</span>
+                    </button>
+                    <button class="btn-pos btn-pos--kitchen" onclick="enviarPedido()" id="btnMandarCocina">
+                        <i class="bi bi-fire"></i>
+                        <span>Mandar a cocina</span>
+                    </button>
+                    <button class="btn-pos btn-pos--close" onclick="cerrarMesa()" id="btnCerrarMesa">
+                        <i class="bi bi-x-circle-fill"></i>
+                        <span>Cerrar mesa</span>
+                    </button>
+                </div>
+            </div>
+
+        </div><!-- /pos-body -->
+    </div><!-- /pos-panel -->
+</div><!-- /pos-backdrop -->
+
+
+<!-- Toast notification -->
+<div class="toast" id="toast">
+    <div class="toast-inner">
+        <i class="bi toast-icon" id="toastIcon"></i>
+        <span id="toastMsg"></span>
+    </div>
+</div>
+
+<script src="../../Assets/Js/Service/main.js"></script>
+</body>
+</html>

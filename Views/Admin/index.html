@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Panel de administración del sistema de restaurante. Gestiona mesas, trabajadores e ingresos.">
+    <title>Admin Panel | RestaurantOS</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../Assets/Css/Admin/admin.css">
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════
+     PANTALLA: AUTH  (login + register)
+══════════════════════════════════════════ -->
+<div class="auth-screen" id="authScreen">
+
+    <!-- Glow decorativos -->
+    <div class="auth-glow auth-glow--a"></div>
+    <div class="auth-glow auth-glow--b"></div>
+
+    <div class="auth-box" id="authBox">
+
+        <!-- ── Logo ── -->
+        <div class="auth-logo">
+            <span class="auth-logo-icon"><i class="bi bi-fire"></i></span>
+            <span class="auth-logo-name">RestaurantOS</span>
+        </div>
+
+        <!-- ══ PANEL LOGIN ══ -->
+        <div class="auth-panel" id="panelLogin">
+            <div class="auth-header">
+                <h1 class="auth-title">Acceso Administrador</h1>
+                <p class="auth-subtitle">Ingresa tus credenciales para continuar</p>
+            </div>
+
+            <form class="auth-form" id="formLogin" onsubmit="login(event)">
+                <div class="field-group">
+                    <label class="field-label" for="loginUser">Usuario</label>
+                    <div class="field-wrap">
+                        <i class="bi bi-person-fill field-icon"></i>
+                        <input class="field-input" id="loginUser" type="text" placeholder="Nombre de usuario" autocomplete="username" required>
+                    </div>
+                </div>
+
+                <div class="field-group">
+                    <label class="field-label" for="loginPass">Contraseña</label>
+                    <div class="field-wrap">
+                        <i class="bi bi-lock-fill field-icon"></i>
+                        <input class="field-input" id="loginPass" type="password" placeholder="••••••••" autocomplete="current-password" required>
+                        <button type="button" class="field-toggle" id="toggleLoginPass" onclick="togglePassword('loginPass','toggleLoginPass')" aria-label="Mostrar contraseña">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="auth-msg" id="loginMsg"></div>
+
+                <button class="btn-auth btn-auth--primary" type="submit" id="btnLogin">
+                    <i class="bi bi-box-arrow-in-right"></i>
+                    Iniciar sesión
+                </button>
+
+                <div class="auth-divider"><span>¿No tienes cuenta?</span></div>
+
+                <button class="btn-auth btn-auth--ghost" type="button" onclick="showRegister()">
+                    <i class="bi bi-person-plus-fill"></i>
+                    Ir a Registro
+                </button>
+            </form>
+
+            <div class="auth-hint">
+                <i class="bi bi-info-circle"></i>
+                Demo: usa cualquier usuario registrado
+            </div>
+        </div>
+
+        <!-- ══ PANEL REGISTRO ══ -->
+        <div class="auth-panel auth-panel--hidden" id="panelRegister">
+            <div class="auth-header">
+                <h1 class="auth-title">Registro Administrador</h1>
+                <p class="auth-subtitle">Crea una cuenta para gestionar el sistema</p>
+            </div>
+
+            <form class="auth-form" id="formRegister" onsubmit="register(event)">
+                <div class="field-group">
+                    <label class="field-label" for="regName">Nombre completo</label>
+                    <div class="field-wrap">
+                        <i class="bi bi-person-badge-fill field-icon"></i>
+                        <input class="field-input" id="regName" type="text" placeholder="Tu nombre" required>
+                    </div>
+                </div>
+
+                <div class="field-group">
+                    <label class="field-label" for="regUser">Usuario</label>
+                    <div class="field-wrap">
+                        <i class="bi bi-at field-icon"></i>
+                        <input class="field-input" id="regUser" type="text" placeholder="Nombre de usuario" required>
+                    </div>
+                </div>
+
+                <div class="field-group">
+                    <label class="field-label" for="regPass">Contraseña</label>
+                    <div class="field-wrap">
+                        <i class="bi bi-lock-fill field-icon"></i>
+                        <input class="field-input" id="regPass" type="password" placeholder="Mínimo 6 caracteres" required>
+                        <button type="button" class="field-toggle" id="toggleRegPass" onclick="togglePassword('regPass','toggleRegPass')" aria-label="Mostrar contraseña">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="field-group">
+                    <label class="field-label" for="regPassConf">Confirmar contraseña</label>
+                    <div class="field-wrap">
+                        <i class="bi bi-shield-lock-fill field-icon"></i>
+                        <input class="field-input" id="regPassConf" type="password" placeholder="Repite tu contraseña" required>
+                    </div>
+                </div>
+
+                <div class="auth-msg" id="registerMsg"></div>
+
+                <button class="btn-auth btn-auth--primary" type="submit">
+                    <i class="bi bi-person-plus-fill"></i>
+                    Registrar Administrador
+                </button>
+
+                <div class="auth-divider"><span>¿Ya tienes cuenta?</span></div>
+
+                <button class="btn-auth btn-auth--ghost" type="button" onclick="showLogin()">
+                    <i class="bi bi-arrow-left"></i>
+                    Volver al Login
+                </button>
+            </form>
+        </div>
+
+    </div><!-- /auth-box -->
+</div><!-- /auth-screen -->
+
+
+<!-- ══════════════════════════════════════════
+     PANEL ADMINISTRADOR
+══════════════════════════════════════════ -->
+<div class="panel" id="panelAdmin" style="display:none;">
+
+    <!-- ── SIDEBAR ── -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <span class="sidebar-logo"><i class="bi bi-fire"></i></span>
+            <span class="sidebar-name">RestaurantOS</span>
+        </div>
+
+        <div class="sidebar-user" id="sidebarUser">
+            <div class="su-avatar" id="suAvatar">A</div>
+            <div class="su-info">
+                <span class="su-name" id="suName">Admin</span>
+                <span class="su-role">Administrador</span>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <span class="nav-section-label">Principal</span>
+
+            <button class="nav-item active" id="nav-dashboard" onclick="navigate('dashboard')">
+                <i class="bi bi-grid-1x2-fill"></i>
+                <span>Dashboard</span>
+            </button>
+
+            <button class="nav-item" id="nav-mesas" onclick="navigate('mesas')">
+                <i class="bi bi-layout-three-columns"></i>
+                <span>Mesas</span>
+            </button>
+
+            <button class="nav-item" id="nav-menu" onclick="navigate('menu')">
+                <i class="bi bi-journal-text"></i>
+                <span>Menú</span>
+            </button>
+
+            <span class="nav-section-label">Gestión</span>
+
+            <button class="nav-item" id="nav-trabajadores" onclick="navigate('trabajadores')">
+                <i class="bi bi-people-fill"></i>
+                <span>Trabajadores</span>
+            </button>
+
+            <button class="nav-item" id="nav-bolsa" onclick="navigate('bolsa')">
+                <i class="bi bi-cash-coin"></i>
+                <span>Bolsa del Día</span>
+            </button>
+        </nav>
+
+        <div class="sidebar-footer">
+            <button class="nav-item nav-item--danger" onclick="logout()" id="btnLogout">
+                <i class="bi bi-box-arrow-left"></i>
+                <span>Cerrar sesión</span>
+            </button>
+            <a class="nav-item nav-item--back" href="../../index.html">
+                <i class="bi bi-house-fill"></i>
+                <span>Inicio</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- ── MAIN ── -->
+    <div class="panel-main">
+
+        <!-- Topbar -->
+        <header class="topbar" id="topbar">
+            <button class="topbar-burger" id="sidebarToggle" onclick="toggleSidebar()" aria-label="Abrir menú">
+                <i class="bi bi-list"></i>
+            </button>
+            <div class="topbar-title" id="topbarTitle">Dashboard</div>
+            <div class="topbar-right">
+                <div class="topbar-time" id="topbarTime"></div>
+                <div class="topbar-avatar" id="topbarAvatar">A</div>
+            </div>
+        </header>
+
+        <!-- Content área -->
+        <main class="content" id="content">
+
+            <!-- ═══ SECCIÓN: DASHBOARD ═══ -->
+            <section class="view" id="view-dashboard">
+                <div class="view-header">
+                    <div>
+                        <h2 class="view-title">Dashboard</h2>
+                        <p class="view-sub">Resumen del día</p>
+                    </div>
+                    <div class="view-date" id="viewDate"></div>
+                </div>
+
+                <!-- KPI cards -->
+                <div class="kpi-grid">
+                    <div class="kpi-card kpi-card--orange">
+                        <div class="kpi-icon"><i class="bi bi-layout-three-columns"></i></div>
+                        <div class="kpi-body">
+                            <span class="kpi-label">Mesas activas</span>
+                            <span class="kpi-value" id="kpi-activas">0</span>
+                        </div>
+                        <div class="kpi-trend"><i class="bi bi-arrow-up-right"></i></div>
+                    </div>
+                    <div class="kpi-card kpi-card--muted">
+                        <div class="kpi-icon"><i class="bi bi-check-circle-fill"></i></div>
+                        <div class="kpi-body">
+                            <span class="kpi-label">Mesas libres</span>
+                            <span class="kpi-value" id="kpi-libres">0</span>
+                        </div>
+                        <div class="kpi-trend kpi-trend--down"><i class="bi bi-dash"></i></div>
+                    </div>
+                    <div class="kpi-card kpi-card--green">
+                        <div class="kpi-icon"><i class="bi bi-cash-stack"></i></div>
+                        <div class="kpi-body">
+                            <span class="kpi-label">Ventas del día</span>
+                            <span class="kpi-value" id="kpi-ventas">C$0</span>
+                        </div>
+                        <div class="kpi-trend"><i class="bi bi-arrow-up-right"></i></div>
+                    </div>
+                    <div class="kpi-card kpi-card--purple">
+                        <div class="kpi-icon"><i class="bi bi-person-workspace"></i></div>
+                        <div class="kpi-body">
+                            <span class="kpi-label">Meseros activos</span>
+                            <span class="kpi-value" id="kpi-meseros">0</span>
+                        </div>
+                        <div class="kpi-trend"><i class="bi bi-arrow-up-right"></i></div>
+                    </div>
+                </div>
+
+                <!-- Quick panels -->
+                <div class="dash-panels">
+                    <div class="dash-panel">
+                        <div class="dp-header">
+                            <span class="dp-title"><i class="bi bi-layout-three-columns"></i> Mesas registradas</span>
+                            <button class="dp-link" onclick="navigate('mesas')">Ver todas <i class="bi bi-arrow-right"></i></button>
+                        </div>
+                        <div id="dashMesasPreview" class="dp-content">
+                            <p class="dp-empty"><i class="bi bi-inbox"></i> Sin mesas registradas</p>
+                        </div>
+                    </div>
+                    <div class="dash-panel">
+                        <div class="dp-header">
+                            <span class="dp-title"><i class="bi bi-people-fill"></i> Trabajadores</span>
+                            <button class="dp-link" onclick="navigate('trabajadores')">Ver todos <i class="bi bi-arrow-right"></i></button>
+                        </div>
+                        <div id="dashTrabajadoresPreview" class="dp-content">
+                            <p class="dp-empty"><i class="bi bi-inbox"></i> Sin trabajadores registrados</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ═══ SECCIÓN: MESAS ═══ -->
+            <section class="view view--hidden" id="view-mesas">
+                <div class="view-header">
+                    <div>
+                        <h2 class="view-title">Gestión de Mesas</h2>
+                        <p class="view-sub">Administra las mesas del restaurante</p>
+                    </div>
+                    <button class="btn-primary" onclick="abrirModalMesa()" id="btnCrearMesa">
+                        <i class="bi bi-plus-circle-fill"></i> Nueva Mesa
+                    </button>
+                </div>
+
+                <!-- Estado legend -->
+                <div class="mesa-legend-bar">
+                    <span class="mlb-item"><span class="mlb-dot mlb-dot--libre"></span> Libre</span>
+                    <span class="mlb-item"><span class="mlb-dot mlb-dot--ocupada"></span> Ocupada</span>
+                    <span class="mlb-item"><span class="mlb-dot mlb-dot--espera"></span> En espera</span>
+                </div>
+
+                <div class="mesas-grid" id="mesasGrid">
+                    <div class="empty-state" id="mesasEmpty">
+                        <i class="bi bi-layout-three-columns"></i>
+                        <p>No hay mesas registradas.</p>
+                        <button class="btn-primary" onclick="abrirModalMesa()"><i class="bi bi-plus-circle-fill"></i> Crear primera mesa</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ═══ SECCIÓN: TRABAJADORES ═══ -->
+            <section class="view view--hidden" id="view-trabajadores">
+                <div class="view-header">
+                    <div>
+                        <h2 class="view-title">Trabajadores</h2>
+                        <p class="view-sub">Gestiona el equipo del restaurante</p>
+                    </div>
+                    <button class="btn-primary" onclick="abrirModalTrabajador()" id="btnCrearTrabajador">
+                        <i class="bi bi-person-plus-fill"></i> Nuevo Trabajador
+                    </button>
+                </div>
+
+                <div class="trabajadores-list" id="trabajadoresList">
+                    <div class="empty-state" id="trabajadoresEmpty">
+                        <i class="bi bi-people"></i>
+                        <p>No hay trabajadores registrados.</p>
+                        <button class="btn-primary" onclick="abrirModalTrabajador()"><i class="bi bi-person-plus-fill"></i> Agregar trabajador</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ═══ SECCIÓN: MENÚ ═══ -->
+            <section class="view view--hidden" id="view-menu">
+                <div class="view-header">
+                    <div>
+                        <h2 class="view-title">Menú del Restaurante</h2>
+                        <p class="view-sub">Gestiona los productos del menú</p>
+                    </div>
+                    <div class="menu-kpis" id="menuKpis">
+                        <span class="menu-kpi-pill" id="mkpiTotal"><i class="bi bi-basket-fill"></i> 0 productos</span>
+                    </div>
+                </div>
+
+                <!-- Formulario agregar producto -->
+                <div class="menu-form-card" id="menuFormCard">
+                    <div class="menu-form-title">
+                        <i class="bi bi-plus-circle-fill"></i>
+                        <span>Agregar producto al menú</span>
+                    </div>
+                    <div class="menu-form-grid">
+                        <div class="field-group">
+                            <label class="field-label" for="prodNombre">Nombre del producto</label>
+                            <div class="field-wrap">
+                                <i class="bi bi-tag-fill field-icon"></i>
+                                <input class="field-input" id="prodNombre" type="text" placeholder="Ej: Pollo a la plancha">
+                            </div>
+                        </div>
+                        <div class="field-group">
+                            <label class="field-label" for="prodCategoria">Categoría</label>
+                            <div class="field-wrap field-wrap--select">
+                                <i class="bi bi-grid-fill field-icon"></i>
+                                <select class="field-input field-select" id="prodCategoria" onchange="updateCatIcon()">
+                                    <option value="Comida">🍽️ Comida</option>
+                                    <option value="Bebida">🥤 Bebida</option>
+                                    <option value="Postre">🍮 Postre</option>
+                                    <option value="Extra">✨ Extra</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="field-group">
+                            <label class="field-label" for="prodPrecio">Precio (C$)</label>
+                            <div class="field-wrap">
+                                <i class="bi bi-currency-dollar field-icon"></i>
+                                <input class="field-input" id="prodPrecio" type="number" min="0" step="0.5" placeholder="0.00">
+                            </div>
+                        </div>
+
+                        <div class="field-group menu-form-desc">
+                            <label class="field-label" for="prodDesc">Descripción</label>
+                            <div class="field-wrap">
+                                <i class="bi bi-card-text field-icon" style="top:.85rem"></i>
+                                <textarea class="field-input field-textarea" id="prodDesc" placeholder="Descripción breve del producto..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="menu-form-actions">
+                        <button class="btn-primary" onclick="agregarProducto()" id="btnAgregarProd">
+                            <i class="bi bi-plus-circle-fill"></i> Agregar al menú
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Filtros por categoría -->
+                <div class="menu-filters" id="menuFilters">
+                    <button class="filter-btn active" id="filter-Todos" onclick="filtrarCategoria('Todos')">
+                        <i class="bi bi-grid-fill"></i> Todos
+                    </button>
+                    <button class="filter-btn" id="filter-Comida" onclick="filtrarCategoria('Comida')">
+                        <i class="bi bi-egg-fried"></i> Comidas
+                    </button>
+                    <button class="filter-btn" id="filter-Bebida" onclick="filtrarCategoria('Bebida')">
+                        <i class="bi bi-cup-straw"></i> Bebidas
+                    </button>
+                    <button class="filter-btn" id="filter-Postre" onclick="filtrarCategoria('Postre')">
+                        <i class="bi bi-cake2-fill"></i> Postres
+                    </button>
+                    <button class="filter-btn" id="filter-Extra" onclick="filtrarCategoria('Extra')">
+                        <i class="bi bi-star-fill"></i> Extras
+                    </button>
+                </div>
+
+                <!-- Grid de productos -->
+                <div class="menu-grid" id="menuGrid">
+                    <div class="empty-state" id="menuEmpty">
+                        <i class="bi bi-journal-x"></i>
+                        <p>No hay productos en el menú.</p>
+                        <span style="font-size:.8rem;color:var(--text-muted)">Usa el formulario de arriba para agregar el primer producto.</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ═══ SECCIÓN: BOLSA DEL DÍA ═══ -->
+            <section class="view view--hidden" id="view-bolsa">
+                <div class="view-header">
+                    <div>
+                        <h2 class="view-title">Bolsa del Día</h2>
+                        <p class="view-sub">Registro de pagos del turno actual</p>
+                    </div>
+                    <div class="bolsa-total-badge">
+                        <i class="bi bi-cash-coin"></i>
+                        Total: <strong id="bolsaTotal">C$0.00</strong>
+                    </div>
+                </div>
+
+                <div class="table-wrapper">
+                    <table class="data-table" id="bolsaTable">
+                        <thead>
+                            <tr>
+                                <th><i class="bi bi-layout-three-columns"></i> Mesa</th>
+                                <th><i class="bi bi-receipt"></i> Consumo</th>
+                                <th><i class="bi bi-cash"></i> Total</th>
+                                <th><i class="bi bi-clock"></i> Hora</th>
+                                <th><i class="bi bi-person-fill"></i> Mesero</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bolsaBody">
+                            <tr>
+                                <td colspan="5" class="table-empty">
+                                    <i class="bi bi-inbox"></i> Sin registros por el momento
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+        </main><!-- /content -->
+    </div><!-- /panel-main -->
+
+    <!-- Overlay sidebar mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+</div><!-- /panel -->
+
+
+<!-- ══════════════════════════════════════════
+     MODALES
+══════════════════════════════════════════ -->
+
+<!-- Modal: crear mesa -->
+<div class="modal-backdrop" id="modalMesa">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalMesaTitle">
+        <div class="modal-header">
+            <h3 class="modal-title" id="modalMesaTitle"><i class="bi bi-layout-three-columns"></i> Nueva Mesa</h3>
+            <button class="modal-close" onclick="cerrarModal('modalMesa')" aria-label="Cerrar"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="field-group">
+                <label class="field-label" for="mesaNumero">Número de mesa</label>
+                <div class="field-wrap">
+                    <i class="bi bi-hash field-icon"></i>
+                    <input class="field-input" id="mesaNumero" type="number" min="1" placeholder="Ej: 1" required>
+                </div>
+            </div>
+            <div class="field-group">
+                <label class="field-label" for="mesaEstado">Estado inicial</label>
+                <div class="field-wrap field-wrap--select">
+                    <i class="bi bi-circle-fill field-icon" id="mesaEstadoIcon" style="color:#71717a"></i>
+                    <select class="field-input field-select" id="mesaEstado" onchange="updateEstadoIcon()">
+                        <option value="libre">Libre</option>
+                        <option value="ocupada">Ocupada</option>
+                        <option value="espera">En espera</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-modal btn-modal--ghost" onclick="cerrarModal('modalMesa')">Cancelar</button>
+            <button class="btn-modal btn-modal--primary" onclick="crearMesa()">
+                <i class="bi bi-plus-circle-fill"></i> Crear Mesa
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: crear trabajador -->
+<div class="modal-backdrop" id="modalTrabajador">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTrabTitle">
+        <div class="modal-header">
+            <h3 class="modal-title" id="modalTrabTitle"><i class="bi bi-person-plus-fill"></i> Nuevo Trabajador</h3>
+            <button class="modal-close" onclick="cerrarModal('modalTrabajador')" aria-label="Cerrar"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="field-group">
+                <label class="field-label" for="trabNombre">Nombre completo</label>
+                <div class="field-wrap">
+                    <i class="bi bi-person-fill field-icon"></i>
+                    <input class="field-input" id="trabNombre" type="text" placeholder="Nombre del trabajador" required>
+                </div>
+            </div>
+            <div class="field-group">
+                <label class="field-label" for="trabUsuario">Usuario</label>
+                <div class="field-wrap">
+                    <i class="bi bi-at field-icon"></i>
+                    <input class="field-input" id="trabUsuario" type="text" placeholder="Usuario de acceso" required>
+                </div>
+            </div>
+            <div class="field-group">
+                <label class="field-label" for="trabRol">Rol</label>
+                <div class="field-wrap field-wrap--select">
+                    <i class="bi bi-briefcase-fill field-icon"></i>
+                    <select class="field-input field-select" id="trabRol">
+                        <option value="Mesero">Mesero</option>
+                        <option value="Caja">Caja</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-modal btn-modal--ghost" onclick="cerrarModal('modalTrabajador')">Cancelar</button>
+            <button class="btn-modal btn-modal--primary" onclick="crearTrabajador()">
+                <i class="bi bi-person-plus-fill"></i> Registrar
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: QR de mesa -->
+<div class="modal-backdrop" id="modalQR">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalQRTitle">
+        <div class="modal-header">
+            <h3 class="modal-title" id="modalQRTitle"><i class="bi bi-qr-code"></i> QR de Mesa</h3>
+            <button class="modal-close" onclick="cerrarModal('modalQR')" aria-label="Cerrar"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="qr-display">
+                <div class="qr-icon-wrap"><i class="bi bi-qr-code"></i></div>
+                <p class="qr-label">Enlace de acceso para la mesa:</p>
+                <div class="qr-link-box">
+                    <span class="qr-link-text" id="qrLinkText"></span>
+                </div>
+                <div class="qr-mesa-info" id="qrMesaInfo"></div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-modal btn-modal--ghost" onclick="cerrarModal('modalQR')">Cerrar</button>
+            <button class="btn-modal btn-modal--orange" onclick="copiarLink()" id="btnCopiarQR">
+                <i class="bi bi-clipboard-fill"></i> Copiar enlace
+            </button>
+            <button class="btn-modal btn-modal--danger" onclick="eliminarQR()">
+                <i class="bi bi-trash-fill"></i> Eliminar QR
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: editar producto -->
+<div class="modal-backdrop" id="modalEditarProd">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalEditProdTitle">
+        <div class="modal-header">
+            <h3 class="modal-title" id="modalEditProdTitle"><i class="bi bi-pencil-fill"></i> Editar Producto</h3>
+            <button class="modal-close" onclick="cerrarModal('modalEditarProd')" aria-label="Cerrar"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="editProdId">
+            <div class="field-group">
+                <label class="field-label" for="editProdNombre">Nombre del producto</label>
+                <div class="field-wrap">
+                    <i class="bi bi-tag-fill field-icon"></i>
+                    <input class="field-input" id="editProdNombre" type="text" placeholder="Nombre del producto">
+                </div>
+            </div>
+            <div class="field-group">
+                <label class="field-label" for="editProdCategoria">Categoría</label>
+                <div class="field-wrap field-wrap--select">
+                    <i class="bi bi-grid-fill field-icon"></i>
+                    <select class="field-input field-select" id="editProdCategoria">
+                        <option value="Comida">🍽️ Comida</option>
+                        <option value="Bebida">🥤 Bebida</option>
+                        <option value="Postre">🍮 Postre</option>
+                        <option value="Extra">✨ Extra</option>
+                    </select>
+                </div>
+            </div>
+            <div class="field-group">
+                <label class="field-label" for="editProdPrecio">Precio (C$)</label>
+                <div class="field-wrap">
+                    <i class="bi bi-currency-dollar field-icon"></i>
+                    <input class="field-input" id="editProdPrecio" type="number" min="0" step="0.5" placeholder="0.00">
+                </div>
+            </div>
+
+            <div class="field-group">
+                <label class="field-label" for="editProdDesc">Descripción</label>
+                <div class="field-wrap">
+                    <i class="bi bi-card-text field-icon" style="top:.85rem"></i>
+                    <textarea class="field-input field-textarea" id="editProdDesc" placeholder="Descripción..."></textarea>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-modal btn-modal--ghost" onclick="cerrarModal('modalEditarProd')">Cancelar</button>
+            <button class="btn-modal btn-modal--primary" onclick="guardarEdicionProducto()">
+                <i class="bi bi-check2-circle"></i> Guardar cambios
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Toast notification -->
+<div class="toast" id="toast">
+    <div class="toast-inner">
+        <i class="bi toast-icon" id="toastIcon"></i>
+        <span id="toastMsg"></span>
+    </div>
+</div>
+
+<script src="../../Assets/Js/Admin/main.js"></script>
+</body>
+</html>
